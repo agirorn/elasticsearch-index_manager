@@ -1,12 +1,9 @@
 require_relative "../spec_helper"
-require "elasticsearch/index_manager"
-require "pry"
-require "awesome_print"
 require 'active_support/core_ext/hash'
 
 describe "Creating index" do
-  def get_mappings
-    elasticsearch_client.indices.get_mapping
+  after do
+    elasticsearch_client.indices.delete index: '_all'
   end
 
   def timestamp
@@ -15,10 +12,6 @@ describe "Creating index" do
 
   def manager
     @manager ||= Elasticsearch::IndexManager::Manager.new timestamp: timestamp
-  end
-
-  before do
-    elasticsearch_client.indices.delete
   end
 
   it "creating simple index" do
@@ -110,5 +103,4 @@ describe "Creating index" do
     end
     indices
   end
-
 end
