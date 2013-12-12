@@ -1,4 +1,5 @@
 require "bundler/gem_tasks"
+require 'rake/testtask'
 
 namespace :esi do
   desc "Reinstall elasticsearch"
@@ -55,13 +56,17 @@ namespace :esi do
 end
 
 desc 'Start Elasticsearch'
-task :es => ["es:start"]
+task :esi => ["es:start"]
 
-require 'rake/testtask'
-Rake::TestTask.new(:test) do |test|
-  test.libs      << 'lib' << 'test'
-  test.pattern   = 'test/{functional,unit}/**/*_test.rb'
-  test.verbose   = true
+desc "MiniTest Spec"
+Rake::TestTask.new do |t|
+  # t.libs    << 'lib' << 'test'
+  t.pattern = "spec/**/*_spec.rb"
+  t.verbose = true
 end
 
+desc "Runa all specs for the project same as :test"
+task :spec => :test
+
 task :default => :test
+
