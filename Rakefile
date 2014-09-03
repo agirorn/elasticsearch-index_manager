@@ -1,5 +1,30 @@
 require "bundler/gem_tasks"
 require 'rake/testtask'
+require 'active_support/core_ext/string/inflections'
+
+def install_elasticsearch_plugin(plugin, dir)
+  dir = dir.to_s
+  name = dir.titlecase
+
+  unless Dir.exists?("elasticsearch")
+    raise "Can't install Inquisitor when ther is no elasticsearch server"
+  end
+
+  if Dir.exists?("elasticsearch/plugins/" + dir )
+    raise "#{name} in allready installed."
+  end
+
+  puts "Installing #{name}...."
+  sh "elasticsearch/bin/plugin -install #{plugin}"
+end
+
+def open_plugin(plugin)
+  if !Dir.exists?("elasticsearch/plugins/" + plugin )
+    raise "Can't open #{plugin} sins it dose not exits"
+  end
+
+  system "open http://localhost:9200/_plugin/#{plugin}/"
+end
 
 namespace :esi do
   desc "Reinstall elasticsearch"
@@ -53,10 +78,68 @@ namespace :esi do
       end
     end
   end
+
+
+  namespace :plugin do
+    namespace :inquisitor do
+      desc "Install the Inquisitor plugin"
+      task :install do
+        install_elasticsearch_plugin 'polyfractal/elasticsearch-inquisitor', :inquisitor
+      end
+
+      task :open do
+        open_plugin('inquisitor')
+      end
+    end
+    desc "Open the Inquisitor plugin in browser"
+    task :inquisitor => ["esi:plugin:inquisitor:open"]
+
+    namespace :bigdesk do
+      desc "Install the BigDesk plugin"
+      task :install do
+        install_elasticsearch_plugin 'lukas-vlcek/bigdesk', :bigdesk
+      end
+
+      task :open do
+        open_plugin('bigdesks')
+      end
+    end
+    desc "Open the BigDesk plugin in browser"
+    task :bigdesk => ["esi:plugin:bigdesk:open"]
+
+    namespace :head do
+      desc "Install the Head plugin"
+      task :install do
+        install_elasticsearch_plugin 'mobz/elasticsearch-head', :head
+      end
+
+      task :open do
+        open_plugin('head')
+      end
+    end
+    desc "Open the Head plugin in browser"
+    task :head => ["esi:plugin:head:open"]
+
+    namespace :hammer do
+      desc "Install the Hammer plugin"
+      task :install do
+        install_elasticsearch_plugin 'andrewvc/elastic-hammer', 'elastic-hammer'
+      end
+
+      task :open do
+        open_plugin('elastic-hammer')
+      end
+    end
+    desc "Open the Hammer plugin in browser"
+    task :hammer => ["esi:plugin:hammer:open"]
+
+
+  end
 end
 
+
 desc 'Start Elasticsearch'
-task :esi => ["es:start"]
+task :esi => ["esi:start"]
 
 desc "MiniTest Spec"
 Rake::TestTask.new do |t|
