@@ -1,5 +1,7 @@
 require 'active_support/core_ext/string/inflections'
 
+ESI_VERSION = ENV['ESI_VERSION'] || '1.3.2'
+
 def install_elasticsearch_plugin(plugin, dir)
   dir = dir.to_s
   name = dir.titlecase
@@ -33,9 +35,14 @@ namespace :esi do
     Rake::Task["es:install"].invoke
   end
 
+  desc "Print Elasticsearch Version"
+  task :version do
+    puts ESI_VERSION
+  end
+
   desc "Install elasticsearch"
   task :install do
-    base = 'elasticsearch-0.90.7'
+    base = "elasticsearch-#{ESI_VERSION}"
     elasticsearch_url = "https://download.elasticsearch.org/elasticsearch/elasticsearch/#{base}.tar.gz"
 
     sh "curl -L -# -o #{base}.tar.gz #{elasticsearch_url}" and
@@ -52,21 +59,23 @@ namespace :esi do
     to = (from + count - 1)
     (from..to).each do |index|
       index = "%03d" % index
-      sh "cd elasticsearch && bin/elasticsearch -p elasticsearch.#{index}.pid"
+      sh "cd elasticsearch && bin/elasticsearch -d -p elasticsearch.#{index}.pid"
     end
   end
 
   desc "Start elasticsearch"
   task :stop do |t, args|
     pid_files = Dir['elasticsearch/elasticsearch.*.pid']
-    if pid_files.length < 1
-      raise <<-MESSGE.gsub(/^\s+/, '')
+
+    unless pid_files.any?
+      puts <<-MESSGE.gsub(/^\s+/, '')
         ###########################################
-        No server is running......
+        No Elasticsearch server is running......
         ###########################################
         MESSGE
     end
-    sh "kill `cat #{pid_files.last}`"
+
+    sh "kill `cat #{pid_files.last}`" if pid_files.any?
   end
 
   namespace :stop do
@@ -76,7 +85,6 @@ namespace :esi do
       end
     end
   end
-
 
   namespace :plugin do
     namespace :inquisitor do
@@ -130,13 +138,8 @@ namespace :esi do
     end
     desc "Open the Hammer plugin in browser"
     task :hammer => ["esi:plugin:hammer:open"]
-
-
   end
 end
 
-
 desc 'Start Elasticsearch'
 task :esi => ["esi:start"]
-
-

@@ -30,7 +30,7 @@ module Elasticsearch
             old_index = get_alias_index_name(read_alias)
 
             old_options = get_old_options_for(old_index)
-            if with_missing_defaults(options) != old_options
+            if with_missing_defaults(options) != with_out_garbage( old_options )
               create_index(new_index, options)
 
               swap_alias write_alias, old_index, new_index
@@ -117,21 +117,33 @@ module Elasticsearch
         client.indices.exists_alias name: name
       end
 
+      def with_out_garbage( options )
+        if options.include? "settings"
+          settings = options["settings"]
+          if settings.include? "index"
+            index = settings["index"]
+            if index.include? "version"
+              index.delete "version"
+            end
+            if index.include? "uuid"
+              index.delete "uuid"
+            end
+          end
+        end
+
+        options
+      end
+
       def with_missing_defaults( options )
         options = options.dup
-        if ! options.include? ["settings"]
-          options["settings"] = Hash.new
-        end
+        settings = options["settings"] ||= Hash.new
 
-        settings = options["settings"]
-        if ! settings.include? "index.number_of_shards"
-          settings["index.number_of_shards"] = "5"
-        end
+        index = settings["index"] ||= Hash.new
 
-        if ! settings.include? "index.number_of_replicas"
-          settings["index.number_of_replicas"] = "1"
-        end
+        index["number_of_shards"] ||= "5"
+        index["number_of_replicas"] ||= "1"
 
+        options["mappings"] = { "mappings" => options["mappings"] }
         return options
       end
 
