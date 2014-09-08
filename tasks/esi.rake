@@ -18,8 +18,8 @@ def install_elasticsearch_plugin(plugin, dir)
   sh "elasticsearch/bin/plugin -install #{plugin}"
 end
 
-def open_plugin(plugin)
-  if !Dir.exists?("elasticsearch/plugins/" + plugin )
+def open_plugin(plugin, option={ check: true })
+  if option[:check] and !Dir.exists?("elasticsearch/plugins/" + plugin )
     raise "Can't open #{plugin} sins it dose not exits"
   end
 
@@ -107,7 +107,7 @@ namespace :esi do
       end
 
       task :open do
-        open_plugin('bigdesks')
+        open_plugin('bigdesk', check: false)
       end
     end
     desc "Open the BigDesk plugin in browser"
