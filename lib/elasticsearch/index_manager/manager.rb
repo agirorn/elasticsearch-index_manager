@@ -8,7 +8,7 @@ module Elasticsearch
       attr_reader :timestamp
       attr_reader  :scroll_timeout
 
-      def initialize(options)
+      def initialize(options = {})
         @timestamp = options[:timestamp] || DateTime.now
         @indices = Hash.new {|hash, key| hash[key] = Hash.new }
         @scroll_timeout = '10m'
